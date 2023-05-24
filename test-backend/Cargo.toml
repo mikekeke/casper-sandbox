@@ -1,0 +1,16 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+actix-cors = "0.6.4"
+casper-client = "1.6.0"
+serde_json = "1"
+casper-node = "=1.4.15-alt"
+log = "0.4"
+jsonrpc-lite = "0.6.0"
+awc = "3.1.1"

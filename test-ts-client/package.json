@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "casper-js-sdk": "^2.12.1"
+  }
+}

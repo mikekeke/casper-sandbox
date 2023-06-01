@@ -11,8 +11,8 @@ extern crate alloc;
 use alloc::{
     fmt::format,
     string::{String, ToString},
+    vec,
     vec::Vec,
-    vec
 };
 
 use casper_contract::{
@@ -20,8 +20,8 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    contracts::NamedKeys, ApiError, CLType, CLValue, EntryPoint, EntryPointAccess, EntryPointType,
-    EntryPoints, Key, NamedKey, RuntimeArgs, bytesrepr::FromBytes,
+    bytesrepr::FromBytes, contracts::NamedKeys, ApiError, CLType, CLValue, EntryPoint,
+    EntryPointAccess, EntryPointType, EntryPoints, Key, NamedKey, RuntimeArgs,
 };
 use entry_points::mk_entry_points;
 // use constants;
@@ -30,8 +30,6 @@ mod constants;
 mod entry_points;
 mod utils;
 
-const MY_KEY_NAME: &str = "my-key-name";
-const RUNTIME_ARG_NAME: &str = "message";
 
 /// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
 #[repr(u16)]
@@ -50,6 +48,9 @@ impl From<Error> for ApiError {
 #[no_mangle]
 pub extern "C" fn init() {
     // TODO: initilaization check
+    if let Some(_) = runtime::get_key(constants::registry::DICT) {
+        runtime::revert(Error::AlreadyInitialized)
+    }
 
     // dictionary will be created in contract context
     storage::new_dictionary(constants::registry::DICT).unwrap_or_revert();
@@ -57,12 +58,12 @@ pub extern "C" fn init() {
 
 #[no_mangle]
 pub extern "C" fn append_chars() {
-
+    // TODO
 }
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-
+    // TODO
 }
 
 fn isntall_contract() -> () {
@@ -89,10 +90,7 @@ fn isntall_contract() -> () {
         storage::new_uref(contract_version).into(),
     );
 
-    runtime::call_contract(
-        contract_hash, 
-        constants::init::ENDPOINT,
-        RuntimeArgs::new())
+    runtime::call_contract(contract_hash, constants::init::ENDPOINT, RuntimeArgs::new())
 }
 
 #[no_mangle]
@@ -161,7 +159,6 @@ pub extern "C" fn call_backed_by_dict() {
 // }
 
 // }
-
 
 #[no_mangle]
 pub extern "C" fn call() {

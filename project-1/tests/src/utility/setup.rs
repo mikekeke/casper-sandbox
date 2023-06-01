@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder, DEFAULT_ACCOUNT_ADDR,
+    InMemoryWasmTestBuilder, WasmTestBuilder,
     DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_CHAINSPEC_REGISTRY, DEFAULT_GENESIS_CONFIG,
     DEFAULT_GENESIS_CONFIG_HASH,
 };
@@ -18,15 +18,13 @@ use casper_execution_engine::{
 };
 
 use casper_types::{
-    account::AccountHash, bytesrepr::FromBytes, runtime_args, CLTyped, ContractHash, Key, Motes,
-    PublicKey, RuntimeArgs, SecretKey, U512,
+    account::AccountHash, Motes,
+    PublicKey, SecretKey, U512,
 };
-
-const CONTRACT_WASM: &str = "contract.wasm";
 
 pub fn setup_chain() -> (
     AccountHash,
-    WasmTestBuilder<casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState>,
+    InMemoryWasmTestBuilder,
 ) {
     const MY_ACCOUNT: [u8; 32] = [7u8; 32];
     // Create keypair.

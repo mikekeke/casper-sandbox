@@ -1,5 +1,5 @@
 pub (crate) mod contract {
-  pub const PACKAGE_NAME: &str = "add-with-registry";
+  pub const PACKAGE_NAME: &str = "add-with-registry-package";
   pub const ACCESS_UREF: &str = "add-with-registry-uref";
   pub const KEY: &str = "add-with-registry-contract-key";
   pub const VERSION_KEY: &str = "add-with-registry-version";

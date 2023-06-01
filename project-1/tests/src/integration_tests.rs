@@ -1,9 +1,6 @@
 use std::path::PathBuf;
 
-
-use casper_engine_test_support::{
-    WasmTestBuilder, ExecuteRequestBuilder,
-};
+use casper_engine_test_support::{ExecuteRequestBuilder, WasmTestBuilder};
 
 use casper_execution_engine::{
     core::{
@@ -13,11 +10,9 @@ use casper_execution_engine::{
     storage::global_state::{CommitProvider, StateProvider},
 };
 
-use casper_types::{
-    bytesrepr::FromBytes, CLTyped, Key, runtime_args, RuntimeArgs
-};
+use casper_types::{bytesrepr::FromBytes, runtime_args, CLTyped, Key, RuntimeArgs};
 
-use crate::utility::{constants, setup};
+use crate::utility::{constants, setup, debug};
 
 #[test]
 fn init_test() {
@@ -32,15 +27,20 @@ fn init_test() {
 
     builder.exec(execute_request).commit().expect_success();
 
-    let execute_request = ExecuteRequestBuilder::standard(
-        account_addr,
-        constants::test::CONTRACT_WASM,
-        runtime_args! {},
-    )
-    .build();
+    debug::print_keys(&builder, account_addr);
 
-    builder.exec(execute_request).commit().expect_success();
+    // let acc = builder.get_expected_account(account_addr);
+    // let account_named_keys = acc.named_keys();
+    // println!("Account named keys:\n{:#?}", account_named_keys);
 
+    // let execute_request = ExecuteRequestBuilder::standard(
+    //     account_addr,
+    //     constants::test::CONTRACT_WASM,
+    //     runtime_args! {},
+    // )
+    // .build();
+
+    // builder.exec(execute_request).commit().expect_success();
 
     // let r = ACCESS_UREF;
 

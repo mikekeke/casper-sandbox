@@ -3,16 +3,16 @@ name = "tests"
 version = "0.1.0"
 edition = "2018"
 
-[dev-dependencies]
+[dependencies]
 # contract = {version = "0.1.0", path = "../contract"}
 casper-contract = { version = "3.0.0", default-features = false, features = ["test-support"] }
 casper-engine-test-support = { version = "5.0.0", features = ["test-support"] }
 casper-execution-engine = "5.0.0"
 casper-types = "3.0.0"
 
-[[bin]]
-name = "integration-tests"
-path = "src/integration_tests.rs"
+[lib]
+name = "tests"
+# path = "src/integration_tests.rs"
 bench = false
 doctest = false
 

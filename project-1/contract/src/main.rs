@@ -30,7 +30,6 @@ mod constants;
 mod entry_points;
 mod utils;
 
-
 /// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
 #[repr(u16)]
 enum Error {
@@ -64,7 +63,18 @@ pub extern "C" fn append_chars() {
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-    // TODO
+    let account_hash = runtime::get_caller().to_string();
+    let key = account_hash.as_str();
+
+    let is_registered = storage::named_dictionary_get(constants::registry::DICT, key)
+        .unwrap_or_revert()
+        .unwrap_or(false);
+
+    if is_registered {
+        runtime::revert(Error::UserAlreadyRegistered);
+    }
+
+    storage::named_dictionary_put(constants::registry::DICT, key, true);
 }
 
 fn isntall_contract() -> () {

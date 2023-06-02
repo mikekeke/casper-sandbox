@@ -1,17 +1,10 @@
-use std::path::PathBuf;
-
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder,
-    DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_CHAINSPEC_REGISTRY, DEFAULT_GENESIS_CONFIG,
-    DEFAULT_GENESIS_CONFIG_HASH,
+    ExecuteRequestBuilder, InMemoryWasmTestBuilder, DEFAULT_ACCOUNT_INITIAL_BALANCE,
+    DEFAULT_CHAINSPEC_REGISTRY, DEFAULT_GENESIS_CONFIG, DEFAULT_GENESIS_CONFIG_HASH,
 };
 
-use casper_execution_engine::{
-    core::{
-        engine_state::{self, run_genesis_request::RunGenesisRequest, GenesisAccount},
-        execution,
-    },
-    storage::global_state::{CommitProvider, StateProvider},
+use casper_execution_engine::core::engine_state::{
+    run_genesis_request::RunGenesisRequest, GenesisAccount,
 };
 
 use casper_types::{
@@ -93,12 +86,10 @@ pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemory
 }
 
 pub fn named_dictionary_get<R>(
-    // pub fn named_dictionary_get(
     builder: &InMemoryWasmTestBuilder,
     account_hash: AccountHash,
     dict_name: &str,
     some_key: &str,
-    // ) -> ()
 ) -> R
 where
     R: CLTyped + FromBytes,

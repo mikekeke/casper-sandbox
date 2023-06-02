@@ -1,8 +1,7 @@
-use casper_contract::contract_api::storage;
 use casper_engine_test_support::ExecuteRequestBuilder;
 use casper_types::{runtime_args, RuntimeArgs};
 
-use crate::utility::{assert, constants, debug, misc};
+use crate::utility::{assert, constants, misc};
 
 #[test]
 fn user_registration() {

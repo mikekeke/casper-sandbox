@@ -47,34 +47,44 @@ impl From<Error> for ApiError {
 
 #[no_mangle]
 pub extern "C" fn init() {
-    // TODO: initilaization check
-    if let Some(_) = runtime::get_key(constants::registry::DICT) {
-        runtime::revert(Error::AlreadyInitialized)
-    }
+    ensure_not_init();
 
     // dictionary will be created in contract context
     storage::new_dictionary(constants::registry::DICT).unwrap_or_revert();
 }
 
-#[no_mangle]
-pub extern "C" fn append_chars() {
-    // TODO
+fn ensure_not_init() {
+    if let Some(_) = runtime::get_key(constants::registry::DICT) {
+        runtime::revert(Error::AlreadyInitialized)
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-    let account_hash = runtime::get_caller().to_string();
-    let key = account_hash.as_str();
-
-    let is_registered = storage::named_dictionary_get(constants::registry::DICT, key)
-        .unwrap_or_revert()
-        .unwrap_or(false);
+    let (is_registered, account_hash) = caller_is_registered();
 
     if is_registered {
         runtime::revert(Error::UserAlreadyRegistered);
     }
 
-    storage::named_dictionary_put(constants::registry::DICT, key, true);
+    storage::named_dictionary_put(constants::registry::DICT, account_hash.as_str(), true);
+}
+
+#[no_mangle]
+pub extern "C" fn append_chars() {
+    let (is_registered, account_hash) = caller_is_registered();
+    if !is_registered {
+        runtime::revert(Error::UnregisteredTriedToAdd)
+    }
+}
+
+fn caller_is_registered() -> (bool, String) {
+    let account_hash = runtime::get_caller().to_string();
+    let key = account_hash.as_str();
+    let is_registered = storage::named_dictionary_get(constants::registry::DICT, key)
+        .unwrap_or_revert()
+        .unwrap_or(false);
+    (is_registered, account_hash)
 }
 
 fn isntall_contract() -> () {

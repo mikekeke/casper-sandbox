@@ -1,16 +1,8 @@
-use std::path::PathBuf;
+use casper_engine_test_support::ExecuteRequestBuilder;
 
-use casper_engine_test_support::{ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder};
-
-use casper_execution_engine::core::{
-    engine_state::{self},
-    execution,
-};
-
-use casper_types::{bytesrepr::FromBytes, runtime_args, CLTyped, Key, RuntimeArgs};
+use casper_types::{runtime_args, RuntimeArgs};
 
 use crate::utility::{assert, constants, debug, misc};
-
 
 #[test]
 fn deploy() {
@@ -35,7 +27,7 @@ fn deploy() {
 }
 
 #[test]
-fn cant_deploy_second_time() {
+fn can_not_deploy_second_time() {
     let (account_addr, mut builder) = misc::deploy_contract();
     let execute_request = ExecuteRequestBuilder::standard(
         account_addr,
@@ -48,7 +40,7 @@ fn cant_deploy_second_time() {
 }
 
 #[test]
-fn cant_init_second_time() {
+fn can_not_init_second_time() {
     let (account_addr, mut builder) = misc::deploy_contract();
     let execute_request = ExecuteRequestBuilder::standard(
         account_addr,
@@ -180,7 +172,3 @@ fn cant_init_second_time() {
 //         .commit()
 //         .expect_failure();
 // }
-
-fn main() {
-    panic!("Execute \"cargo test\" to test the contract, not \"cargo run\".");
-}

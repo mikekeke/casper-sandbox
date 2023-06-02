@@ -1,10 +1,7 @@
-
-
 use std::path::PathBuf;
 
-
 use casper_engine_test_support::{
-    InMemoryWasmTestBuilder, WasmTestBuilder,
+    ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder,
     DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_CHAINSPEC_REGISTRY, DEFAULT_GENESIS_CONFIG,
     DEFAULT_GENESIS_CONFIG_HASH,
 };
@@ -18,14 +15,12 @@ use casper_execution_engine::{
 };
 
 use casper_types::{
-    account::AccountHash, Motes,
-    PublicKey, SecretKey, U512,
+    account::AccountHash, runtime_args, RuntimeArgs, Contract, ContractHash, Motes, PublicKey, SecretKey, U512,
 };
 
-pub fn setup_chain() -> (
-    AccountHash,
-    InMemoryWasmTestBuilder,
-) {
+use crate::utility::constants;
+
+pub(crate) fn setup_chain() -> (AccountHash, InMemoryWasmTestBuilder) {
     const MY_ACCOUNT: [u8; 32] = [7u8; 32];
     // Create keypair.
     let secret_key = SecretKey::ed25519_from_bytes(MY_ACCOUNT).unwrap();
@@ -55,5 +50,43 @@ pub fn setup_chain() -> (
 
     let mut builder = InMemoryWasmTestBuilder::default();
     builder.run_genesis(&run_genesis_request).commit();
+    (account_addr, builder)
+}
+
+pub(crate) fn get_contract_hash(
+    builder: &InMemoryWasmTestBuilder,
+    account_addr: AccountHash,
+) -> ContractHash {
+    let account = builder.get_expected_account(account_addr);
+    let account_named_keys = account.named_keys();
+    account_named_keys
+        .get(constants::contract::KEY)
+        .expect("must have contract hash key as part of contract creation")
+        .into_hash()
+        .map(ContractHash::new)
+        .expect("must get contract hash")
+}
+
+pub(crate) fn get_contract(
+    builder: &InMemoryWasmTestBuilder,
+    account_addr: AccountHash,
+) -> Contract {
+    builder
+        .get_contract(get_contract_hash(builder, account_addr))
+        .expect("this contract should exist")
+}
+
+pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemoryWasmTestBuilder) {
+    let (account_addr, mut builder) = setup_chain();
+
+    let execute_request = ExecuteRequestBuilder::standard(
+        account_addr,
+        constants::test::CONTRACT_WASM,
+        runtime_args! {},
+    )
+    .build();
+
+    builder.exec(execute_request).commit().expect_success();
+
     (account_addr, builder)
 }

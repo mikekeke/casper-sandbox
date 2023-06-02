@@ -1,4 +1,8 @@
 #[cfg(test)]
-mod integration_tests;
+mod v_1_deploy;
+#[cfg(test)]
+mod register;
 #[cfg(test)]
 mod utility;
+
+

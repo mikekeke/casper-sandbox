@@ -34,9 +34,10 @@ mod utils;
 /// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
 #[repr(u16)]
 enum Error {
-    AlreadyInitialized = 0,
-    UserAlreadyRegistered = 1,
-    UnregisteredTriedToAdd = 2,
+    AlredayDeployed = 0,
+    AlreadyInitialized = 1,
+    UserAlreadyRegistered = 2,
+    UnregisteredTriedToAdd = 3,
 }
 
 impl From<Error> for ApiError {
@@ -75,7 +76,7 @@ fn isntall_contract() -> () {
         new_empty_val.into(),
     );
 
-    let (contract_hash, contract_version) = storage::new_contract(
+    let (contract_hash, contract_version) = storage::new_locked_contract(
         mk_entry_points(),
         Some(contract_keys),
         Some(constants::contract::PACKAGE_NAME.to_string()),
@@ -162,5 +163,8 @@ pub extern "C" fn call_backed_by_dict() {
 
 #[no_mangle]
 pub extern "C" fn call() {
+    if let Some(_) = runtime::get_key(constants::contract::ACCESS_UREF) {
+        runtime::revert(Error::AlredayDeployed)
+    }
     isntall_contract();
 }

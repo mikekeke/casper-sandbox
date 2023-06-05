@@ -1,7 +1,7 @@
 use casper_engine_test_support::ExecuteRequestBuilder;
 use casper_types::{runtime_args, RuntimeArgs};
 
-use crate::utility::{assert, constants, misc};
+use crate::utility::{assert, constants, misc, query};
 
 #[test]
 fn user_registration() {
@@ -9,14 +9,14 @@ fn user_registration() {
     let call_register = ExecuteRequestBuilder::contract_call_by_hash(
         account_addr,
         misc::get_contract_hash(&builder, account_addr),
-        constants::registry::ENDPOINT,
+        constants::registry::ENTRYPOINT,
         runtime_args! {},
     )
     .build();
     builder.exec(call_register).expect_success().commit();
 
     let key = account_addr.to_string();
-    let is_registered: bool = misc::named_dictionary_get(
+    let is_registered: bool = query::named_dictionary(
         &builder,
         account_addr,
         constants::registry::DICT,
@@ -31,7 +31,7 @@ fn can_not_register_twice() {
     let call_register = ExecuteRequestBuilder::contract_call_by_hash(
         account_addr,
         misc::get_contract_hash(&builder, account_addr),
-        constants::registry::ENDPOINT,
+        constants::registry::ENTRYPOINT,
         runtime_args! {},
     )
     .build();
@@ -40,7 +40,7 @@ fn can_not_register_twice() {
     let call_register = ExecuteRequestBuilder::contract_call_by_hash(
         account_addr,
         misc::get_contract_hash(&builder, account_addr),
-        constants::registry::ENDPOINT,
+        constants::registry::ENTRYPOINT,
         runtime_args! {},
     )
     .build();

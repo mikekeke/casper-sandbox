@@ -37,6 +37,7 @@ enum Error {
     AlreadyInitialized = 1,
     UserAlreadyRegistered = 2,
     UnregisteredTriedToAdd = 3,
+    ValueKeyNotFound = 4,
 }
 
 impl From<Error> for ApiError {
@@ -61,13 +62,13 @@ fn ensure_not_init() {
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-    let (is_registered, account_hash) = caller_is_registered();
+    let (is_registered, key) = caller_is_registered();
 
     if is_registered {
         runtime::revert(Error::UserAlreadyRegistered);
     }
 
-    storage::named_dictionary_put(constants::registry::DICT, account_hash.as_str(), true);
+    storage::named_dictionary_put(constants::registry::DICT, key.as_str(), true);
 }
 
 #[no_mangle]
@@ -76,6 +77,23 @@ pub extern "C" fn append_chars() {
     if !is_registered {
         runtime::revert(Error::UnregisteredTriedToAdd)
     }
+
+    let val_key = runtime::get_key(constants::append::ACCUM_VALUE)
+        .unwrap_or_revert_with(Error::ValueKeyNotFound);
+    let what_to_add: String = runtime::get_named_arg(constants::append::ARG);
+    let mut current_value: String = storage::read_from_key(val_key)
+        .unwrap_or_revert_with(ApiError::Read)
+        .unwrap_or_revert_with(ApiError::ValueNotFound);
+
+    if !current_value.is_empty() {
+        current_value.push_str(";");
+    }
+    current_value.push_str(&what_to_add);
+
+    let key_uref = val_key
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
+    storage::write(key_uref, current_value);
 }
 
 fn caller_is_registered() -> (bool, String) {
@@ -111,39 +129,9 @@ fn isntall_contract() -> () {
         storage::new_uref(contract_version).into(),
     );
 
-    runtime::call_contract(contract_hash, constants::init::ENDPOINT, RuntimeArgs::new())
+    runtime::call_contract(contract_hash, constants::init::ENTRYPOINT, RuntimeArgs::new())
 }
 
-#[no_mangle]
-pub extern "C" fn call_backed_by_dict() {
-    // // runtime::revert(Error::CntNotOne);
-
-    // let caller = runtime::get_caller(); // todo get caller from ARGs
-    // let registry = *runtime::get_key(constants::REGISTRY_DICT)
-    //     .unwrap_or_revert_with(Error::RegistryNotFound)
-    //     .as_uref()
-    //     .unwrap_or_revert();
-
-    // let caller_key = caller.to_string();
-    // let cnt = storage::dictionary_get::<u64>(registry, &caller_key.as_str())
-    //     .unwrap_or_revert()
-    //     .unwrap_or(0);
-    // if cnt != 1 {
-    //     runtime::revert(Error::CntNotOne)
-    // };
-    // // ! looks like reutrn only works with `call_contract(...)`
-    // // ! called from another contract
-    // // runtime::ret(CLValue::from_t(cnt).unwrap_or_revert())
-}
-
-// #[no_mangle]
-// pub extern "C" fn append_to_value() {
-//     let mut_val_key = runtime::get_key(MUT_VAL);
-//     if mut_val_key.is_none() {
-//         runtime::revert(Error::KeyNotFound);
-//     }
-
-//     let what_to_add: String = runtime::get_named_arg(constants::ADD_ARG_NAME);
 //     let mut current_val: String = storage::read_from_key(mut_val_key.unwrap_or_revert())
 //         .unwrap_or_revert_with(ApiError::Read)
 //         .unwrap_or_revert_with(ApiError::ValueNotFound);
@@ -161,24 +149,6 @@ pub extern "C" fn call_backed_by_dict() {
 //     // storage::write(key_uref, new_val);
 //     storage::write(key_uref, current_val);
 //     registry_caller();
-// }
-
-// fn registry_caller() {
-//     let caller = runtime::get_caller();
-
-//     let registry = *runtime::get_key(constants::REGISTRY_DICT)
-//         .unwrap_or_revert_with(Error::RegistryNotFound)
-//         .as_uref()
-//         .unwrap_or_revert();
-
-//     let caller_key = caller.to_string();
-
-//     match storage::dictionary_get::<u64>(registry, &caller_key.as_str()).unwrap_or_revert() {
-//         None => storage::dictionary_put(registry, &caller_key, 1u64),
-//         Some(x) => storage::dictionary_put(registry, &caller_key, x + 1u64),
-//     }
-// }
-
 // }
 
 #[no_mangle]

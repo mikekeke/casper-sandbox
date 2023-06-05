@@ -55,7 +55,7 @@ fn can_not_init_second_time() {
     let call_init = ExecuteRequestBuilder::contract_call_by_hash(
         account_addr,
         misc::get_contract_hash(&builder, account_addr),
-        constants::init::ENDPOINT,
+        constants::init::ENTRYPOINT,
         runtime_args! {},
     )
     .build();

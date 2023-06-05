@@ -70,6 +70,18 @@ pub(crate) fn get_contract(
         .expect("this contract should exist")
 }
 
+pub(crate) fn get_contract_key(
+    builder: &InMemoryWasmTestBuilder,
+    account_addr: AccountHash,
+    key: &str,
+) -> casper_types::Key {
+    let contract = get_contract(&builder, account_addr);
+    *contract
+        .named_keys()
+        .get(key)
+        .expect("Key for mutable value should exist")
+}
+
 pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemoryWasmTestBuilder) {
     let (account_addr, mut builder) = setup_chain();
 
@@ -83,32 +95,4 @@ pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemory
     builder.exec(execute_request).commit().expect_success();
 
     (account_addr, builder)
-}
-
-pub fn named_dictionary_get<R>(
-    builder: &InMemoryWasmTestBuilder,
-    account_hash: AccountHash,
-    dict_name: &str,
-    some_key: &str,
-) -> R
-where
-    R: CLTyped + FromBytes,
-{
-    let contract = get_contract(builder, account_hash);
-    let dict_seed_uref = *contract
-        .named_keys()
-        .get_key_value(dict_name)
-        .expect(format!("should return key-value pair for key `{}`", dict_name).as_str())
-        .1
-        .as_uref()
-        .expect("should be URef");
-
-    builder
-        .query_dictionary_item(None, dict_seed_uref, some_key)
-        .expect("should have dictionary value")
-        .as_cl_value()
-        .expect("T should be CLValue")
-        .to_owned()
-        .into_t()
-        .unwrap()
 }

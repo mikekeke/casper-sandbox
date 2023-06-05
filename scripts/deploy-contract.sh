@@ -10,4 +10,4 @@ casper-client put-deploy \
   --chain-name casper-test \
   --secret-key ${SECRET_KEY} \
   --payment-amount 22000000000 \
-  --session-path ../contract-v1/target/wasm32-unknown-unknown/release/counter-v1.wasm
+  --session-path ../project-1/contract/target/wasm32-unknown-unknown/release/contract.wasm

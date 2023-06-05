@@ -129,27 +129,12 @@ fn isntall_contract() -> () {
         storage::new_uref(contract_version).into(),
     );
 
-    runtime::call_contract(contract_hash, constants::init::ENTRYPOINT, RuntimeArgs::new())
+    runtime::call_contract(
+        contract_hash,
+        constants::init::ENTRYPOINT,
+        RuntimeArgs::new(),
+    )
 }
-
-//     let mut current_val: String = storage::read_from_key(mut_val_key.unwrap_or_revert())
-//         .unwrap_or_revert_with(ApiError::Read)
-//         .unwrap_or_revert_with(ApiError::ValueNotFound);
-//     if current_val.is_empty() {
-//         current_val.push_str(&what_to_add);
-//     } else {
-//         current_val.push_str(";");
-//         current_val.push_str(&what_to_add);
-//     }
-
-//     let key_uref = mut_val_key
-//         .unwrap_or_revert_with(ApiError::MissingKey)
-//         .into_uref()
-//         .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
-//     // storage::write(key_uref, new_val);
-//     storage::write(key_uref, current_val);
-//     registry_caller();
-// }
 
 #[no_mangle]
 pub extern "C" fn call() {

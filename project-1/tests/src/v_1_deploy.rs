@@ -31,7 +31,7 @@ fn can_not_deploy_second_time() {
     let (account_addr, mut builder) = misc::deploy_contract();
     let execute_request = ExecuteRequestBuilder::standard(
         account_addr,
-        constants::test::CONTRACT_WASM,
+        "contract.wasm",
         runtime_args! {},
     )
     .build();
@@ -44,7 +44,7 @@ fn can_not_init_second_time() {
     let (account_addr, mut builder) = misc::deploy_contract();
     let execute_request = ExecuteRequestBuilder::standard(
         account_addr,
-        constants::test::CONTRACT_WASM,
+        "contract.wasm",
         runtime_args! {},
     )
     .build();

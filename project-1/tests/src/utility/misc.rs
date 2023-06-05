@@ -75,7 +75,7 @@ pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemory
 
     let execute_request = ExecuteRequestBuilder::standard(
         account_addr,
-        constants::test::CONTRACT_WASM,
+        "contract.wasm",
         runtime_args! {},
     )
     .build();

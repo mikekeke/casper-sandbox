@@ -3,16 +3,33 @@ name = "tests"
 version = "0.1.0"
 edition = "2018"
 
-[dependencies]
-# contract = {version = "0.1.0", path = "../contract"}
-casper-contract = { version = "3.0.0", default-features = false, features = ["test-support"] }
-casper-engine-test-support = { version = "5.0.0", features = ["test-support"] }
+# [dependencies]
+# # contract = {version = "0.1.0", path = "../contract"}
+# casper-contract = { version = "3.0.0", default-features = false, features = ["test-support"] }
+# casper-engine-test-support = { version = "5.0.0", features = ["test-support"] }
+# casper-execution-engine = "5.0.0"
+# casper-types = "3.0.0"
+
+# [lib]
+# name = "tests"
+# # path = "src/integration_tests.rs"
+# bench = false
+# doctest = false
+
+[dev-dependencies]
+casper-contract = { version = "3.0.0", default-features = false }
+contract = { path = "../contract" }
 casper-execution-engine = "5.0.0"
+casper-engine-test-support = "5.0.0"
 casper-types = "3.0.0"
 
-[lib]
-name = "tests"
+# [[bin]]
+# name = "integration-tests"
 # path = "src/integration_tests.rs"
-bench = false
-doctest = false
+# bench = false
+# doctest = false
+
+[features]
+default = ["std"]
+std = ["casper-contract/std"]
 

@@ -1,7 +1,8 @@
 use casper_engine_test_support::ExecuteRequestBuilder;
 use casper_types::{runtime_args, RuntimeArgs};
 
-use crate::utility::{assert, constants, misc, query};
+use crate::utility::{assert, misc, query};
+use contract::constants;
 
 #[test]
 fn append() {

@@ -8,11 +8,12 @@ use casper_execution_engine::core::engine_state::{
 };
 
 use casper_types::{
-    account::AccountHash, bytesrepr::FromBytes, runtime_args, CLTyped, Contract, ContractHash,
-    Motes, PublicKey, RuntimeArgs, SecretKey, U512,
+    account::AccountHash, runtime_args, Contract, ContractHash, Motes, PublicKey, RuntimeArgs,
+    SecretKey, U512,
 };
 
-use crate::utility::constants;
+use crate::utility::wasm;
+use contract::constants;
 
 pub(crate) fn setup_chain() -> (AccountHash, InMemoryWasmTestBuilder) {
     const MY_ACCOUNT: [u8; 32] = [7u8; 32];
@@ -85,12 +86,9 @@ pub(crate) fn get_contract_key(
 pub(crate) fn deploy_contract() -> (casper_types::account::AccountHash, InMemoryWasmTestBuilder) {
     let (account_addr, mut builder) = setup_chain();
 
-    let execute_request = ExecuteRequestBuilder::standard(
-        account_addr,
-        constants::test::CONTRACT_WASM,
-        runtime_args! {},
-    )
-    .build();
+    let execute_request =
+        ExecuteRequestBuilder::standard(account_addr, wasm::CONTRACT_WASM, runtime_args! {})
+            .build();
 
     builder.exec(execute_request).commit().expect_success();
 

@@ -8,21 +8,13 @@ compile_error!("target arch should be wasm32: compile with '--target wasm32-unkn
 // `no_std` environment.
 extern crate alloc;
 
-use alloc::{
-    fmt::format,
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
+use alloc::string::{String, ToString};
 
 use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_types::{
-    bytesrepr::FromBytes, contracts::NamedKeys, ApiError, CLType, CLValue, EntryPoint,
-    EntryPointAccess, EntryPointType, EntryPoints, Key, NamedKey, RuntimeArgs,
-};
+use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs};
 use entry_points::mk_entry_points;
 // use constants;
 
@@ -55,7 +47,7 @@ pub extern "C" fn init() {
 }
 
 fn ensure_not_init() {
-    if let Some(_) = runtime::get_key(constants::registry::DICT) {
+    if runtime::get_key(constants::registry::DICT).is_some() {
         runtime::revert(Error::AlreadyInitialized)
     }
 }
@@ -73,7 +65,7 @@ pub extern "C" fn register_user_key() {
 
 #[no_mangle]
 pub extern "C" fn append_chars() {
-    let (is_registered, account_hash) = caller_is_registered();
+    let (is_registered, _account_hash) = caller_is_registered();
     if !is_registered {
         runtime::revert(Error::UnregisteredTriedToAdd)
     }
@@ -86,7 +78,7 @@ pub extern "C" fn append_chars() {
         .unwrap_or_revert_with(ApiError::ValueNotFound);
 
     if !current_value.is_empty() {
-        current_value.push_str(";");
+        current_value.push(';');
     }
     current_value.push_str(&what_to_add);
 
@@ -105,7 +97,7 @@ fn caller_is_registered() -> (bool, String) {
     (is_registered, account_hash)
 }
 
-fn isntall_contract() -> () {
+fn isntall_contract() {
     let mut contract_keys = NamedKeys::new();
 
     let new_empty_val = storage::new_uref("");
@@ -138,7 +130,7 @@ fn isntall_contract() -> () {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    if let Some(_) = runtime::get_key(constants::contract::ACCESS_UREF) {
+    if runtime::get_key(constants::contract::ACCESS_UREF).is_some() {
         runtime::revert(Error::AlredayDeployed)
     }
     isntall_contract();

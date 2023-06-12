@@ -2,10 +2,7 @@ import * as fs from 'fs';
 
 import {
   Keys
-
-
 } from "casper-js-sdk";
-
 
 export function readWasm(path: fs.PathOrFileDescriptor): Uint8Array {
   return new Uint8Array(fs.readFileSync(path))

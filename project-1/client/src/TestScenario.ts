@@ -14,6 +14,8 @@ import {
 } from "casper-js-sdk";
 
 import { readKeys, readWasm } from "./Utils";
+import { ContractSDK } from "./ContractSDK";
+import { deployFromJson } from "casper-js-sdk/dist/lib/DeployUtil";
 
 enum Network {
   // MAINNET = "mainnet",
@@ -46,31 +48,32 @@ function setupEnv(network: Network): [string, Keys.AsymmetricKey, string] {
 
 const [network, keys, nodeRpc] = setupEnv(currentNetwork)
 
-const client = new CasperClient(nodeRpc);
-const contract = new Contracts.Contract(client);
+const contactSdk = new ContractSDK(nodeRpc, network)
+
 const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/contract.wasm"
 
 async function runScenario() {
 
   console.log({ accountHex: keys.accountHex() })
 
-  let r = await client.nodeClient.getStatus()
+  let r = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
   console.log({ nodeStatus: r })
 
   const wasm = readWasm(wasmPath)
-
-  let deploy = contract.install(
+  const [installDeploy, deployHash] = await contactSdk.installOnChain(
     wasm,
-    RuntimeArgs.fromMap({}),
     "21334128500",
     keys.publicKey,
-    network,
     [keys]
   )
 
-  const res = await client.putDeploy(deploy)
-  console.log({ installHex: res })
-  return res
+  console.log({deployHash: deployHash })
+
+  console.log("Awaiting deploy ready...")
+  const installDeployResult = await contactSdk.awaitDeployed(installDeploy)
+  console.log({installDeployResult: installDeployResult.execution_results[0].result})
+
+
 }
 
 runScenario().then(res => {

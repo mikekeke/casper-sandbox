@@ -26,3 +26,15 @@ clean:
 	cd contract && cargo clean
 	cd tests && cargo clean
 	rm -rf tests/wasm
+
+nctl-up:
+	cd nctl-docker && docker compose up
+
+nctl-up-detach:
+	cd nctl-docker && docker compose up -d
+
+nctl-down:
+	cd nctl-docker && docker compose down
+
+copy-nctl-keys:
+	cd nctl-docker && docker compose cp mynctl:/home/casper/casper-node/utils/nctl/assets/net-1/users .

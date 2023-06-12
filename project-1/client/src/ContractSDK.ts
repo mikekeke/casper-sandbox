@@ -55,4 +55,12 @@ export class ContractSDK {
   ): Promise<GetDeployResult> {
     return this.casperClient.nodeClient.waitForDeploy(deploy, timeout)
   }
+
+  public static isDeploySuccesfull(deployResult: GetDeployResult): boolean {
+    if (deployResult.execution_results[0].result.Success) {
+      return true
+    } else {
+      return false
+    }
+  }
 }

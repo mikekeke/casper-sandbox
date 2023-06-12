@@ -52,6 +52,9 @@ const contactSdk = new ContractSDK(nodeRpc, network)
 
 const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/contract.wasm"
 
+// can be found from regression cost test in contract repo
+const contractInstallCost = "21334128500"
+
 async function runScenario() {
 
   console.log({ accountHex: keys.accountHex() })
@@ -62,7 +65,7 @@ async function runScenario() {
   const wasm = readWasm(wasmPath)
   const [installDeploy, deployHash] = await contactSdk.installOnChain(
     wasm,
-    "21334128500",
+    contractInstallCost, 
     keys.publicKey,
     [keys]
   )
@@ -71,9 +74,12 @@ async function runScenario() {
 
   console.log("Awaiting deploy ready...")
   const installDeployResult = await contactSdk.awaitDeployed(installDeploy)
-  console.log({installDeployResult: installDeployResult.execution_results[0].result})
-
-
+  
+  if (!ContractSDK.isDeploySuccesfull(installDeployResult)) {
+    console.log({installDeployResult: installDeployResult.execution_results[0].result})
+    throw new Error("Install deploy failed")
+  }
+  console.log("Contract installed")
 }
 
 runScenario().then(res => {

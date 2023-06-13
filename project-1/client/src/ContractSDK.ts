@@ -28,6 +28,7 @@ export class ContractSDK {
     deploySender: CLPublicKey,
     keys: Keys.AsymmetricKey[],
   ): DeployUtil.Deploy {
+    this.contractClient.setContractHash
     return this.contractClient.install(
       wasm,
       RuntimeArgs.fromMap({}),
@@ -36,6 +37,28 @@ export class ContractSDK {
       this.chainName,
       keys
     )
+  }
+
+  public async findContractHash(publicKey: CLPublicKey): Promise<string | undefined> {
+    const rootHash = await this.casperClient.nodeClient.getStateRootHash()
+    const accountHash = publicKey.toAccountHashStr()
+    const state = await this.casperClient.nodeClient
+      .getBlockState(rootHash, accountHash, [])
+      return state
+      .Account
+      ?.namedKeys
+      .find(key => key.name === "add-with-registry-contract-key")
+      ?.key
+  }
+
+  public async setAccoutHash(publicKey: CLPublicKey): Promise<void> {
+    const contractHash = await this.findContractHash(publicKey)
+    if (!contractHash) {
+      throw new Error("Contract hash not found under expected key. Is contract deployed?")
+    }
+    console.log({ contractHash: contractHash })
+    this.contractClient.setContractHash(contractHash)
+
   }
 
   public async installOnChain(
@@ -49,11 +72,27 @@ export class ContractSDK {
       .then(deployHash => { return [installDeploy, deployHash] })
   }
 
-  public async awaitDeployed(
+  public async awaitDeploy(
     deploy: DeployUtil.Deploy,
     timeout?: number
   ): Promise<GetDeployResult> {
     return this.casperClient.nodeClient.waitForDeploy(deploy, timeout)
+  }
+
+  public async register(
+    paymentAmount: string,
+    deploySender: CLPublicKey,
+    keys: Keys.AsymmetricKey[],): Promise<[DeployUtil.Deploy, string]> {
+    const deploy = this.contractClient.callEntrypoint(
+      "register_user_key",
+      RuntimeArgs.fromMap({}),
+      deploySender,
+      this.chainName,
+      paymentAmount,
+      keys
+    )
+    return this.casperClient.putDeploy(deploy)
+      .then(deployHash => { return [deploy, deployHash] })
   }
 
   public static isDeploySuccesfull(deployResult: GetDeployResult): boolean {

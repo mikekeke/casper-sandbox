@@ -59,28 +59,53 @@ async function runScenario() {
 
   console.log({ accountHex: keys.accountHex() })
 
-  let r = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
-  console.log({ nodeStatus: r })
+  const nodeStatus = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
+  console.log({ nodeStatus: nodeStatus })
 
+  const contractHash = contactSdk.findContractHash(keys.publicKey)
+
+  if (!contractHash) {
+    await installContract()
+  } else {
+    console.log("Contract already installed. Procceding to endpoints calls.")
+  }
+
+  console.log("Setting contract hash to client")
+  await contactSdk.setAccoutHash(keys.publicKey)
+
+  console.log("Calling register")
+  let [regDeploy, regDeployHash] = await contactSdk.register(
+    "312402510",
+    keys.publicKey,
+    [keys]
+  )
+  console.log("Awaiting reg deploy ready...")
+  const regDeployResult = await contactSdk.awaitDeploy(regDeploy)
+  console.log(JSON.stringify(regDeployResult.execution_results[0].result))
+}
+
+async function installContract() {
   const wasm = readWasm(wasmPath)
   const [installDeploy, deployHash] = await contactSdk.installOnChain(
     wasm,
-    contractInstallCost, 
+    contractInstallCost,
     keys.publicKey,
     [keys]
   )
 
-  console.log({deployHash: deployHash })
+  console.log({ deployHash: deployHash })
 
-  console.log("Awaiting deploy ready...")
-  const installDeployResult = await contactSdk.awaitDeployed(installDeploy)
-  
+  console.log("Awaiting install deploy ready...")
+  const installDeployResult = await contactSdk.awaitDeploy(installDeploy)
+
   if (!ContractSDK.isDeploySuccesfull(installDeployResult)) {
-    console.log({installDeployResult: installDeployResult.execution_results[0].result})
-    throw new Error("Install deploy failed")
+    console.log({ installDeployResult: installDeployResult.execution_results[0].result })
+    const cause = installDeployResult.execution_results[0].result.Failure?.error_message
+    throw new Error("Install deploy failed: " + cause)
   }
   console.log("Contract installed")
 }
+
 
 runScenario().then(res => {
   console.log("--- Result ---")

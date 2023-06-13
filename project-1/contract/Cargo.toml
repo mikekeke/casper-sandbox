@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 casper-contract = "3.0.0"
 casper-types = "3.0.0"
+casper-event-standard = "0.3.0"
 
 [[bin]]
 name = "contract"

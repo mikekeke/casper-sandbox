@@ -14,13 +14,15 @@ use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
+use casper_event_standard::casper_types as es_types;
+use casper_event_standard::{Event, Schemas};
 use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs};
 use entry_points::mk_entry_points;
-// use constants;
 
 mod constants;
 mod entry_points;
 mod utils;
+mod events;
 
 /// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
 #[repr(u16)]
@@ -44,6 +46,8 @@ pub extern "C" fn init() {
 
     // dictionary will be created in contract context
     storage::new_dictionary(constants::registry::DICT).unwrap_or_revert();
+
+    init_events();
 }
 
 fn ensure_not_init() {
@@ -128,10 +132,26 @@ fn isntall_contract() {
     )
 }
 
+
+
+#[no_mangle]
+pub extern "C" fn emit_event() {
+    let caller = runtime::get_caller();
+    let event = events::SomeEvent {
+        emitted_by: String::from("test"),
+    };
+    casper_event_standard::emit(event);
+}
+
 #[no_mangle]
 pub extern "C" fn call() {
     if runtime::get_key(constants::contract::ACCESS_UREF).is_some() {
         runtime::revert(Error::AlredayDeployed)
     }
     isntall_contract();
+}
+
+fn init_events() {
+    let schemas = Schemas::new().with::<events::SomeEvent>();
+    casper_event_standard::init(schemas);
 }

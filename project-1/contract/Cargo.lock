@@ -65,13 +65,71 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "casper-contract"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea8cbb5f40b9d5a89c9fe49e57b911a3fa30d23f3492ba34744fdafb5807907a"
+dependencies = [
+ "casper-types 2.0.0",
+ "hex_fmt",
+]
+
+[[package]]
+name = "casper-contract"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4243fe64dad13cfbc610a11b72587f5cebcc7578db057be19a8a67d75d64f947"
 dependencies = [
- "casper-types",
+ "casper-types 3.0.0",
  "hex_fmt",
  "wee_alloc",
+]
+
+[[package]]
+name = "casper-event-standard"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f819282085ee57396e55ce479358cec55a59256d41123bdeff01603a656a8d43"
+dependencies = [
+ "casper-contract 2.0.0",
+ "casper-event-standard-macro",
+ "casper-types 2.0.0",
+]
+
+[[package]]
+name = "casper-event-standard-macro"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9aa65e3924500140d3885d94c8a2609e32a9396b617b07346bec5826972450c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "casper-types"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e40fa172ff619ae56b2d3c6feb3e941a07fc64c0c73b913621ab0b2808cad80"
+dependencies = [
+ "base16",
+ "base64",
+ "bitflags",
+ "blake2",
+ "ed25519-dalek",
+ "hex",
+ "hex_fmt",
+ "k256",
+ "num",
+ "num-derive",
+ "num-integer",
+ "num-rational",
+ "num-traits",
+ "rand 0.8.5",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "uint",
 ]
 
 [[package]]
@@ -116,8 +174,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "contract"
 version = "0.1.0"
 dependencies = [
- "casper-contract",
- "casper-types",
+ "casper-contract 3.0.0",
+ "casper-event-standard",
+ "casper-types 3.0.0",
 ]
 
 [[package]]

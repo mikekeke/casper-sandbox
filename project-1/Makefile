@@ -39,5 +39,5 @@ nctl-down:
 nctl-restart:
 	cd nctl-docker && docker compose exec -d mynctl /bin/bash "-c" "chmod +x /home/casper/restart.sh && /home/casper/restart.sh"
 
-copy-nctl-keys:
+nctl-copy-keys:
 	cd nctl-docker && docker compose cp mynctl:/home/casper/casper-node/utils/nctl/assets/net-1/users .

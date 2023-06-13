@@ -33,11 +33,22 @@ pub fn append() -> EntryPoint {
     )
 }
 
+pub fn emit_event() -> EntryPoint {
+    EntryPoint::new(
+        String::from("emit_event"),
+        vec![],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    )
+}
+
 pub fn mk_entry_points() -> EntryPoints {
     let mut entry_points = EntryPoints::new();
     entry_points.add_entry_point(init());
     entry_points.add_entry_point(register());
     entry_points.add_entry_point(append());
+    entry_points.add_entry_point(emit_event());
 
     entry_points
 }

@@ -8,7 +8,6 @@ use contract::constants;
 #[test]
 fn deploy() {
     let (account_addr, builder) = misc::deploy_contract();
-    debug::print_keys(&builder, account_addr);
 
     let contract = misc::get_contract(&builder, account_addr);
     let contract_keys = contract.named_keys();

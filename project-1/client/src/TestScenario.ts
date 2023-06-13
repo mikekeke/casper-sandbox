@@ -15,7 +15,11 @@ import {
 
 import { readKeys, readWasm } from "./Utils";
 import { ContractSDK } from "./ContractSDK";
+import { startListening } from "./EventHandler";
 import { deployFromJson } from "casper-js-sdk/dist/lib/DeployUtil";
+
+import { CasperServiceByJsonRPC } from 'casper-js-sdk';
+import { ExecutionResult, Parser } from '@make-software/ces-js-parser';
 
 enum Network {
   // MAINNET = "mainnet",
@@ -53,16 +57,18 @@ const contactSdk = new ContractSDK(nodeRpc, network)
 const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/contract.wasm"
 
 // can be found from regression cost test in contract repo
-const contractInstallCost = "21334128500"
+const contractInstallCost = "50334128500"
 
 async function runScenario() {
+  startListening("http://localhost:18101")
 
-  console.log({ accountHex: keys.accountHex() })
+  // console.log({ accountHex: keys.accountHex() })
 
-  const nodeStatus = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
-  console.log({ nodeStatus: nodeStatus })
+  // const nodeStatus = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
+  // console.log({ nodeStatus: nodeStatus })
 
-  const contractHash = contactSdk.findContractHash(keys.publicKey)
+  const contractHash = await contactSdk.findContractHash(keys.publicKey)
+  console.log({ contractHash: contractHash })
 
   if (!contractHash) {
     await installContract()
@@ -71,18 +77,39 @@ async function runScenario() {
   }
 
   console.log("Setting contract hash to client")
-  await contactSdk.setAccoutHash(keys.publicKey)
+  // await contactSdk.setAccoutHash(keys.publicKey)
 
-  console.log("Calling register")
-  let [regDeploy, regDeployHash] = await contactSdk.register(
-    "312402510",
-    keys.publicKey,
-    [keys]
-  )
-  console.log("Awaiting reg deploy ready...")
-  const regDeployResult = await contactSdk.awaitDeploy(regDeploy)
-  console.log(JSON.stringify(regDeployResult.execution_results[0].result))
+  // console.log("Calling event")
+  // let [regDeploy, eventDeployHash] = await contactSdk.emit_event(
+  //   "502402510",
+  //   keys.publicKey,
+  //   [keys]
+  // )
+  // console.log("Awaiting event deploy ready. Hash: " + eventDeployHash)
+  // const eventDeployResult = await contactSdk.awaitDeploy(regDeploy)
+  // console.log(eventDeployResult.execution_results[0].result)
+
 }
+
+// async function processEvents(deployHash: string, contractSdk: ContractSDK) {
+//   // const r1 = await contractSdk.contractClient.casperClient?.getDeploy(deployHash)
+//   const rpcClient = new CasperServiceByJsonRPC(
+//     `http://localhost:11101/rpc`
+//   );
+
+//   const parser = await Parser.create(rpcClient, ["0a70ebdce3c421b541fd836ec0131a27b449ed3ef6b1ba41364b6d4576de070a"])
+//   const deploy = await rpcClient.getDeployInfo(deployHash);
+
+//   const events = await parser.parseExecutionResult(
+//     deploy.execution_results[0].result as ExecutionResult
+//   );
+
+//   events.forEach(ev => {
+//     console.log("____________")
+//     console.log(ev)
+
+//   });
+// }
 
 async function installContract() {
   const wasm = readWasm(wasmPath)

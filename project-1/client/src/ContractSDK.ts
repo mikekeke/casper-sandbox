@@ -95,6 +95,22 @@ export class ContractSDK {
       .then(deployHash => { return [deploy, deployHash] })
   }
 
+  public async emit_event(
+    paymentAmount: string,
+    deploySender: CLPublicKey,
+    keys: Keys.AsymmetricKey[],): Promise<[DeployUtil.Deploy, string]> {
+    const deploy = this.contractClient.callEntrypoint(
+      "emit_event",
+      RuntimeArgs.fromMap({}),
+      deploySender,
+      this.chainName,
+      paymentAmount,
+      keys
+    )
+    return this.casperClient.putDeploy(deploy)
+      .then(deployHash => { return [deploy, deployHash] })
+  }
+
   public static isDeploySuccesfull(deployResult: GetDeployResult): boolean {
     if (deployResult.execution_results[0].result.Success) {
       return true

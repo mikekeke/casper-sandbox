@@ -1,6 +1,7 @@
 
 
 import {
+  DeployUtil,
   Keys
 
 
@@ -44,7 +45,7 @@ function setupEnv(network: Network): [string, Keys.AsymmetricKey, string, string
 
 const [network, keys, nodeRpc, nodeEvents] = setupEnv(currentNetwork)
 
-const  exampleContractClient = new ExampleContractClient(nodeRpc, nodeEvents, network, keys.publicKey)
+const exampleContractClient = new ExampleContractClient(nodeRpc, nodeEvents, network, keys.publicKey)
 
 
 const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/contract.wasm"
@@ -54,37 +55,60 @@ const contractInstallCost = "50334128500"
 
 async function runScenario() {
   const eventHandler = await EventHandler.create(exampleContractClient)
-  
+
   const contractHash = await exampleContractClient.findContractHash()
   console.log({ contractHash: contractHash })
-  
+
   if (!contractHash) {
     await installContract()
   } else {
     console.log("Contract already installed. Procceding to endpoints calls.")
   }
-  
+
   console.log("Initializing client with hash of deployed contract")
   await exampleContractClient.initWithContractHash()
-  
+
   console.log("Start listening events")
   eventHandler.startListening(ev => {
     console.log(JSON.stringify(ev))
   })
 
+  
+  await registerAndWaitExecuted()
+  await appendAndWaitExecuted("Append B")
+  
   await emitEvent("test-message-2")
   await emitEvent("test-message-3")
 
+  const currentPhrase = await exampleContractClient.queyPharase()
+  console.log(`Current phhrase: ${currentPhrase}`)
+
 }
 
-async function callRegisterAndWaitSuccess() {
-  console.log("Calling event")
+async function appendAndWaitExecuted(phrase: string) {
+  let [appendDeploy, appendDeployHash] = await exampleContractClient.append(
+    phrase,
+    "502402510",
+    keys.publicKey,
+    [keys]
+  )
+  console.log(`Awaiting append deploy executed. Hash: ${appendDeployHash}`)
+  const appendDeployResult = await exampleContractClient.awaitDeploy(appendDeploy)
+  if (!ExampleContractClient.isDeploySuccesfull(appendDeployResult)) {
+    const cause = appendDeployResult.execution_results[0].result.Failure?.error_message
+    console.log(`Append failed: ${cause}`)
+  } else {
+    console.log(`Appended sucessfully!`)
+  }
+}
+
+async function registerAndWaitExecuted() {
   let [regDeploy, regDeployHash] = await exampleContractClient.register(
     "502402510",
     keys.publicKey,
     [keys]
   )
-  console.log(`Awaiting event deploy ready. Hash: ${regDeployHash}`)
+  console.log(`Awaiting register deploy executed. Hash: ${regDeployHash}`)
   const regDeployResult = await exampleContractClient.awaitDeploy(regDeploy)
   console.log(regDeployResult.execution_results[0].result)
 }
@@ -97,9 +121,9 @@ async function emitEvent(message: string) {
     keys.publicKey,
     [keys]
   )
-  console.log("Awaiting event deploy ready. Hash: " + eventDeployHash)
-  const eventDeployResult = await exampleContractClient.awaitDeploy(eventDeploy)
-  console.log(eventDeployResult.execution_results[0].result)
+  console.log("Awaiting event deploy executed. Hash: " + eventDeployHash)
+  await exampleContractClient.awaitDeploy(eventDeploy)
+  // console.log(eventDeployResult.execution_results[0].result)
 }
 
 async function installContract() {

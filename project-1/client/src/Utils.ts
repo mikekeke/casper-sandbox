@@ -13,3 +13,5 @@ export function readKeys(path: String): Keys.AsymmetricKey {
     path + "/public_key.pem",
     path + "/secret_key.pem")
 }
+
+// export function falureReason()

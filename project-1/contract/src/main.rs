@@ -68,7 +68,7 @@ pub extern "C" fn register_user_key() {
 }
 
 #[no_mangle]
-pub extern "C" fn append_chars() {
+pub extern "C" fn append_phrase() {
     let (is_registered, _account_hash) = caller_is_registered();
     if !is_registered {
         runtime::revert(Error::UnregisteredTriedToAdd)

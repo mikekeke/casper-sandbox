@@ -39,12 +39,17 @@ export class EventHandler {
 
     this.eventStream.subscribe(EventName.DeployProcessed, async (event) => {
       const executionResult = event.body.DeployProcessed.execution_result
-      const parseResults = parser.parseExecutionResult(executionResult);
-      if (parseResults.length > 0) {
-        // TODO: probably persisitng of last received pr.id is required, coz
-        // in case of dApp restart event listener can receive some old events
-        parseResults.map(pr => SomeEvent.fromEvent(pr.event)).forEach(processEvent);
+      try {
+        const parseResults = parser.parseExecutionResult(executionResult);
+        if (parseResults.length > 0) {
+          // TODO: probably persisitng of last received pr.id is required, coz
+          // in case of dApp restart event listener can receive some old events
+          parseResults.map(pr => SomeEvent.fromEvent(pr.event)).forEach(processEvent);
+        }
+      } catch (e) {
+        console.error(`EventHandler: Failed to parse deploy event: ${e}`) // TODO: more info in error
       }
+      
     })
   }
 

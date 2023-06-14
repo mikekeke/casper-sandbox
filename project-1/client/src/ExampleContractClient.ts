@@ -10,8 +10,12 @@ import {
   NamedArg
 } from "casper-js-sdk";
 
+
+type DeployHash = string
+
 export class ExampleContractClient {
-  readonly contractKey = "add-with-registry-contract-key";
+  
+  readonly contractKey = "add_with_registry_contract_key";
   private casperClient: CasperClient;
 
   public contractClient: Contracts.Contract;
@@ -109,6 +113,24 @@ export class ExampleContractClient {
       .then(deployHash => { return [deploy, deployHash] })
   }
 
+  public async append(
+    phrase: string,
+    paymentAmount: string,
+    deploySender: CLPublicKey,
+    keys: Keys.AsymmetricKey[]
+  ): Promise<[DeployUtil.Deploy, string]> {
+    const deploy = this.contractClient.callEntrypoint(
+      "append_phrase",
+      RuntimeArgs.fromMap({ what_to_append: CLValueBuilder.string(phrase) }),
+      deploySender,
+      this.chainName,
+      paymentAmount,
+      keys
+    )
+    return this.casperClient.putDeploy(deploy)
+      .then(deployHash => { return [deploy, deployHash] })
+  }
+
   public async emitEvent(
     message: string,
     paymentAmount: string,
@@ -127,6 +149,11 @@ export class ExampleContractClient {
     )
     return this.casperClient.putDeploy(deploy)
       .then(deployHash => { return [deploy, deployHash] })
+  }
+
+  public async queyPharase(): Promise<string> {
+    return this.contractClient.queryContractData(["accumulator_value"])
+    
   }
 
   public static isDeploySuccesfull(deployResult: GetDeployResult): boolean {

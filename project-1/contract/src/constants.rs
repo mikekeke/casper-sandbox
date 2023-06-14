@@ -1,8 +1,8 @@
 pub mod contract {
-    pub const PACKAGE_NAME: &str = "add-with-registry-package";
-    pub const ACCESS_UREF: &str = "add-with-registry-uref";
-    pub const KEY: &str = "add-with-registry-contract-key";
-    pub const VERSION_KEY: &str = "add-with-registry-version";
+    pub const PACKAGE_NAME: &str = "add_with_registry_package";
+    pub const ACCESS_UREF: &str = "add_with_registry_uref";
+    pub const KEY: &str = "add_with_registry_contract_key";
+    pub const VERSION_KEY: &str = "add_with_registry_version";
 }
 
 pub mod init {
@@ -12,13 +12,13 @@ pub mod init {
 
 pub mod registry {
     pub const ENTRYPOINT: &str = "register_user_key";
-    pub const DICT: &str = "registry-dict";
+    pub const DICT: &str = "registry_dict";
 }
 
 pub mod append {
-    pub const ENTRYPOINT: &str = "append_chars";
-    pub const ARG: &str = "what-to-append";
-    pub const ACCUM_VALUE: &str = "accumulator-value";
+    pub const ENTRYPOINT: &str = "append_phrase";
+    pub const ARG: &str = "what_to_append";
+    pub const ACCUM_VALUE: &str = "accumulator_value";
 }
 
 pub mod events {

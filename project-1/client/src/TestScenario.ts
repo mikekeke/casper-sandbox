@@ -29,20 +29,22 @@ enum Network {
 
 const currentNetwork = Network.PRIVATE
 
-function setupEnv(network: Network): [string, Keys.AsymmetricKey, string] {
+function setupEnv(network: Network): [string, Keys.AsymmetricKey, string, string] {
   switch (network.valueOf()) {
     case Network.PRIVATE:
       return [
         "casper-net-1",
         readKeys("../nctl-docker/users/user-10"),
         "http://localhost:11101/rpc"
+        , "http://localhost:18101/events/main"
       ]
 
     case Network.TESTNET:
       return [
         "casper-test",
         readKeys("../../../test-1-ed25519-keys"),
-        "http://94.130.10.55:7777/rpc"
+        "http://94.130.10.55:7777/rpc",
+        "http://94.130.10.55:9999/events/main"
       ]
 
     default:
@@ -50,7 +52,7 @@ function setupEnv(network: Network): [string, Keys.AsymmetricKey, string] {
   }
 }
 
-const [network, keys, nodeRpc] = setupEnv(currentNetwork)
+const [network, keys, nodeRpc, nodeEvents] = setupEnv(currentNetwork)
 
 const contactSdk = new ContractSDK(nodeRpc, network)
 
@@ -60,34 +62,26 @@ const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/cont
 const contractInstallCost = "50334128500"
 
 async function runScenario() {
-  startListening("http://localhost:18101")
-
+  
   // console.log({ accountHex: keys.accountHex() })
-
+  
   // const nodeStatus = await contactSdk.contractClient.casperClient?.nodeClient.getStatus()
   // console.log({ nodeStatus: nodeStatus })
-
+  
   const contractHash = await contactSdk.findContractHash(keys.publicKey)
   console.log({ contractHash: contractHash })
-
+  
   if (!contractHash) {
     await installContract()
   } else {
     console.log("Contract already installed. Procceding to endpoints calls.")
   }
-
+  
   console.log("Setting contract hash to client")
-  // await contactSdk.setAccoutHash(keys.publicKey)
+  await contactSdk.setContractHash(keys.publicKey)
+  startListening(nodeEvents, nodeRpc, contactSdk.getContractHash())
 
-  // console.log("Calling event")
-  // let [regDeploy, eventDeployHash] = await contactSdk.emit_event(
-  //   "502402510",
-  //   keys.publicKey,
-  //   [keys]
-  // )
-  // console.log("Awaiting event deploy ready. Hash: " + eventDeployHash)
-  // const eventDeployResult = await contactSdk.awaitDeploy(regDeploy)
-  // console.log(eventDeployResult.execution_results[0].result)
+  // await emitEvent()
 
 }
 
@@ -110,6 +104,18 @@ async function runScenario() {
 
 //   });
 // }
+
+async function emitEvent() {
+  console.log("Calling event")
+  let [regDeploy, eventDeployHash] = await contactSdk.emit_event(
+    "502402510",
+    keys.publicKey,
+    [keys]
+  )
+  console.log("Awaiting event deploy ready. Hash: " + eventDeployHash)
+  const eventDeployResult = await contactSdk.awaitDeploy(regDeploy)
+  console.log(eventDeployResult.execution_results[0].result)
+}
 
 async function installContract() {
   const wasm = readWasm(wasmPath)

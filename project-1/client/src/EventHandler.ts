@@ -11,14 +11,34 @@ import {
   CasperServiceByJsonRPC
 } from "casper-js-sdk";
 
-export function startListening(nodeAddress: string) {
+import { Parser } from "@make-software/ces-js-parser";
+
+function normalizeHash(contractHash: string): string {
+  return contractHash.startsWith("hash-") ? contractHash.slice(5) : contractHash
+}
+
+export async function startListening(nodeEventsUrl: string, nodeRpcUrl: string, contractHash: string) {
+
+  const casperClient = new CasperServiceByJsonRPC(nodeRpcUrl)
+  const rpcClient = new CasperServiceByJsonRPC(nodeRpcUrl)
+
+  const hashsesTowatch = [contractHash].map(normalizeHash)
+  
+  const parser = await Parser.create(rpcClient, hashsesTowatch)
+  
   console.log('Starting event handler...')
-  const addr = nodeAddress + "/events/main"
-  console.log(`Addr: ${addr}`)
-  const es = new EventStream(nodeAddress + "/events/main");
+  const es = new EventStream(nodeEventsUrl);
   es.start()
   es.subscribe(EventName.DeployProcessed, async (event) => {
-    console.log(`GOT EVENT ${event.id}`)
-    console.log(event)
+    const executionResult = event.body.DeployProcessed.execution_result
+    const events = await parser.parseExecutionResult(executionResult);
+    if (events.length > 0) {
+      console.log("----- Contract Events -----")
+      events.forEach(event => {
+        console.log("---- EV ----")
+        console.log(event)
+        console.log("---- EV-end ----")
+      });
+    }
   })
 }

@@ -51,14 +51,17 @@ export class ContractSDK {
       ?.key
   }
 
-  public async setAccoutHash(publicKey: CLPublicKey): Promise<void> {
+  public async setContractHash(publicKey: CLPublicKey): Promise<void> {
     const contractHash = await this.findContractHash(publicKey)
     if (!contractHash) {
       throw new Error("Contract hash not found under expected key. Is contract deployed?")
     }
     console.log({ contractHash: contractHash })
     this.contractClient.setContractHash(contractHash)
+  }
 
+  public getContractHash() {
+    return this.contractClient.contractHash!
   }
 
   public async installOnChain(

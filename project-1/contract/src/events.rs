@@ -1,10 +1,10 @@
 extern crate alloc;
-use alloc::string::{String, ToString};
+use alloc::string::{String};
 
-use casper_event_standard::casper_types as es_types;
-use casper_event_standard::{Event, Schemas};
+
+use casper_event_standard::{Event};
 
 #[derive(Event, Debug, PartialEq)]
 pub struct SomeEvent {
-    pub emitted_by: String,
+    pub message: String,
 }

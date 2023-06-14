@@ -41,3 +41,8 @@ nctl-restart:
 
 nctl-copy-keys:
 	cd nctl-docker && docker compose cp mynctl:/home/casper/casper-node/utils/nctl/assets/net-1/users .
+
+cp-wasm-to-client:
+	cd contract && cargo build --release --target wasm32-unknown-unknown
+	wasm-strip contract/target/wasm32-unknown-unknown/release/contract.wasm 2>/dev/null | true
+	cp contract/target/wasm32-unknown-unknown/release/contract.wasm client/wasm

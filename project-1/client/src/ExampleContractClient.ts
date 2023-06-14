@@ -5,7 +5,9 @@ import {
   CLPublicKey,
   DeployUtil,
   Keys,
-  GetDeployResult
+  GetDeployResult,
+  CLValueBuilder,
+  NamedArg
 } from "casper-js-sdk";
 
 export class ExampleContractClient {
@@ -108,12 +110,16 @@ export class ExampleContractClient {
   }
 
   public async emitEvent(
+    message: string,
     paymentAmount: string,
     deploySender: CLPublicKey,
     keys: Keys.AsymmetricKey[],): Promise<[DeployUtil.Deploy, string]> {
     const deploy = this.contractClient.callEntrypoint(
       "emit_event",
-      RuntimeArgs.fromMap({}),
+      // TODO: write note on how to put sonstants in rust side, coz you can't put
+      // some-event-message as record field, 
+      // and "some_event_message" unless you use NamedArg 
+      RuntimeArgs.fromMap({ some_event_message: CLValueBuilder.string(message) }),
       deploySender,
       this.chainName,
       paymentAmount,

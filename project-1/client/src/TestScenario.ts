@@ -72,19 +72,33 @@ async function runScenario() {
     console.log(JSON.stringify(ev))
   })
 
-  await emitEvent()
+  await emitEvent("test-message-2")
+  await emitEvent("test-message-3")
 
 }
 
-async function emitEvent() {
+async function callRegisterAndWaitSuccess() {
   console.log("Calling event")
-  let [regDeploy, eventDeployHash] = await exampleContractClient.emitEvent(
+  let [regDeploy, regDeployHash] = await exampleContractClient.register(
+    "502402510",
+    keys.publicKey,
+    [keys]
+  )
+  console.log(`Awaiting event deploy ready. Hash: ${regDeployHash}`)
+  const regDeployResult = await exampleContractClient.awaitDeploy(regDeploy)
+  console.log(regDeployResult.execution_results[0].result)
+}
+
+async function emitEvent(message: string) {
+  console.log("Calling event")
+  let [eventDeploy, eventDeployHash] = await exampleContractClient.emitEvent(
+    message,
     "502402510",
     keys.publicKey,
     [keys]
   )
   console.log("Awaiting event deploy ready. Hash: " + eventDeployHash)
-  const eventDeployResult = await exampleContractClient.awaitDeploy(regDeploy)
+  const eventDeployResult = await exampleContractClient.awaitDeploy(eventDeploy)
   console.log(eventDeployResult.execution_results[0].result)
 }
 

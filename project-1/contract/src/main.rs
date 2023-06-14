@@ -14,15 +14,15 @@ use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_event_standard::casper_types as es_types;
-use casper_event_standard::{Event, Schemas};
+
+use casper_event_standard::Schemas;
 use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs};
 use entry_points::mk_entry_points;
 
 mod constants;
 mod entry_points;
-mod utils;
 mod events;
+mod utils;
 
 /// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
 #[repr(u16)]
@@ -101,6 +101,13 @@ fn caller_is_registered() -> (bool, String) {
     (is_registered, account_hash)
 }
 
+#[no_mangle]
+pub extern "C" fn emit_event() {
+    let message: String = runtime::get_named_arg(constants::events::SOME_EVENT_MSG);
+    let event = events::SomeEvent { message };
+    casper_event_standard::emit(event);
+}
+
 fn isntall_contract() {
     let mut contract_keys = NamedKeys::new();
 
@@ -130,17 +137,6 @@ fn isntall_contract() {
         constants::init::ENTRYPOINT,
         RuntimeArgs::new(),
     )
-}
-
-
-
-#[no_mangle]
-pub extern "C" fn emit_event() {
-    let caller = runtime::get_caller();
-    let event = events::SomeEvent {
-        emitted_by: String::from("test"),
-    };
-    casper_event_standard::emit(event);
 }
 
 #[no_mangle]

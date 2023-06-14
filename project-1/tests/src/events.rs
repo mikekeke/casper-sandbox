@@ -4,6 +4,7 @@ use casper_types::{runtime_args, RuntimeArgs, bytesrepr::Bytes};
 
 use crate::utility::{misc::{self, get_contract}, debug};
 use contract::events::SomeEvent;
+use contract::constants;
 
 #[test]
 fn event_emitted() {
@@ -13,7 +14,7 @@ fn event_emitted() {
         account_addr,
         misc::get_contract_hash(&builder, account_addr),
         "emit_event",
-        runtime_args! {},
+        runtime_args! {constants::events::SOME_EVENT_MSG => "message-1"},
     )
     .build();
     builder.exec(call_emit_event).expect_success().commit();
@@ -21,7 +22,7 @@ fn event_emitted() {
     let contract = get_contract(&builder, account_addr);
     let seed_uref = *contract
         .named_keys()
-        .get("__events")
+        .get(casper_event_standard::EVENTS_DICT)
         .expect("must have key")
         .as_uref()
         .expect("must convert to seed uref");
@@ -37,11 +38,10 @@ fn event_emitted() {
         .unwrap();
 
     let expected_event = SomeEvent {
-        emitted_by: String::from("test"),
+        message: String::from("message-1"),
     };
 
     let stored_event = SomeEvent::from_bytes(&stored_event_bytes).unwrap().0;
-    println!("EV: {:#?}", stored_event);
     assert_eq!(expected_event, stored_event);
 
 }

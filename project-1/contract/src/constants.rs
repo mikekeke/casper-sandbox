@@ -20,3 +20,7 @@ pub mod append {
     pub const ARG: &str = "what-to-append";
     pub const ACCUM_VALUE: &str = "accumulator-value";
 }
+
+pub mod events {
+    pub const SOME_EVENT_MSG: &str = "some_event_message";
+}

@@ -3,7 +3,7 @@ mod append;
 #[cfg(test)]
 mod register;
 #[cfg(test)]
-mod size;
+mod gas_cost;
 #[cfg(test)]
 mod utility;
 #[cfg(test)]

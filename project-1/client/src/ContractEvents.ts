@@ -8,17 +8,15 @@ import { Event, Parser, fetchContractSchemasBytes, parseSchemasFromBytes, parseE
 import { ExampleContractClient } from "./ExampleContractClient";
 
 class SomeEvent {
-  readonly emittedBy: string
+  // readonly message: string
 
-  private constructor(emitedBy: string) {
-    this.emittedBy = emitedBy
-  }
+  private constructor(public message: string) { }
 
   public static fromEvent(event: Event): SomeEvent | undefined {
-    if (event.name != "SomeEvent" || event.data["emitted_by"] == undefined) {
+    if (event.name != "SomeEvent" || event.data["message"] == undefined) {
       return undefined
     }
-    return new SomeEvent(event.data.emitted_by.data)
+    return new SomeEvent(event.data.message.data)
   }
 }
 
@@ -43,6 +41,8 @@ export class EventHandler {
       const executionResult = event.body.DeployProcessed.execution_result
       const parseResults = parser.parseExecutionResult(executionResult);
       if (parseResults.length > 0) {
+        // TODO: probably persisitng of last received pr.id is required, coz
+        // in case of dApp restart event listener can receive some old events
         parseResults.map(pr => SomeEvent.fromEvent(pr.event)).forEach(processEvent);
       }
     })

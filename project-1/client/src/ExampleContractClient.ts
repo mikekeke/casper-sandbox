@@ -12,13 +12,21 @@ import {
 
 } from "casper-js-sdk";
 
-export class ContractSDK {
+export class ExampleContractClient {
+  readonly contractKey = "add-with-registry-contract-key";
   private casperClient: CasperClient;
 
   public contractClient: Contracts.Contract;
 
-  constructor(public nodeAddress: string, public chainName: string) {
-    this.casperClient = new CasperClient(nodeAddress);
+  private contractHash: string | undefined = undefined;
+
+  constructor(
+    readonly nodeRpcUrl: string,
+    readonly nodeEventsUrl: string,
+    readonly chainName: string,
+    readonly contractAccount: CLPublicKey
+  ) {
+    this.casperClient = new CasperClient(nodeRpcUrl);
     this.contractClient = new Contracts.Contract(this.casperClient);
   }
 
@@ -39,29 +47,34 @@ export class ContractSDK {
     )
   }
 
-  public async findContractHash(publicKey: CLPublicKey): Promise<string | undefined> {
+  async findContractHash(): Promise<string | undefined> {
     const rootHash = await this.casperClient.nodeClient.getStateRootHash()
-    const accountHash = publicKey.toAccountHashStr()
+    const accountHash = this.contractAccount.toAccountHashStr()
     const state = await this.casperClient.nodeClient
       .getBlockState(rootHash, accountHash, [])
-      return state
+    return state
       .Account
       ?.namedKeys
-      .find(key => key.name === "add-with-registry-contract-key")
+      .find(key => key.name === this.contractKey)
       ?.key
   }
 
-  public async setContractHash(publicKey: CLPublicKey): Promise<void> {
-    const contractHash = await this.findContractHash(publicKey)
-    if (!contractHash) {
-      throw new Error("Contract hash not found under expected key. Is contract deployed?")
+  // Attempts to find contract hash and initialize client with it. Will throw Error if contract key caould not be found.
+  public async initWithContractHash(): Promise<void> {
+    const hash = await this.findContractHash()
+    if (!hash) {
+      throw new Error(`Contract hash not found under expected key "${this.contractKey}" in Account. Is contract deployed?`)
     }
-    console.log({ contractHash: contractHash })
-    this.contractClient.setContractHash(contractHash)
+    this.contractHash = hash!
+    this.contractClient.setContractHash(this.contractHash)
   }
 
   public getContractHash() {
-    return this.contractClient.contractHash!
+    const hash = this.contractHash
+    if (!hash) {
+      throw new Error("Contract hash not set. Shoud use `initWithContractHash` to be able to call get.")
+    }
+    return hash!
   }
 
   public async installOnChain(
@@ -98,7 +111,7 @@ export class ContractSDK {
       .then(deployHash => { return [deploy, deployHash] })
   }
 
-  public async emit_event(
+  public async emitEvent(
     paymentAmount: string,
     deploySender: CLPublicKey,
     keys: Keys.AsymmetricKey[],): Promise<[DeployUtil.Deploy, string]> {

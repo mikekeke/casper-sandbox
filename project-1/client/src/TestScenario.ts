@@ -81,7 +81,7 @@ async function runScenario() {
   await contactSdk.setContractHash(keys.publicKey)
   startListening(nodeEvents, nodeRpc, contactSdk.getContractHash())
 
-  // await emitEvent()
+  await emitEvent()
 
 }
 

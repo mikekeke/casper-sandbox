@@ -1,13 +1,6 @@
 
 
 import {
-  CasperClient,
-  Contracts,
-  RuntimeArgs,
-  CLValueBuilder,
-  CLPublicKey,
-  DeployUtil,
-  Signer,
   Keys
 
 
@@ -16,10 +9,7 @@ import {
 import { readKeys, readWasm } from "./Utils";
 import { ExampleContractClient } from "./ExampleContractClient";
 import { EventHandler } from "./ContractEvents";
-import { deployFromJson } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { CasperServiceByJsonRPC } from 'casper-js-sdk';
-import { ExecutionResult, Parser } from '@make-software/ces-js-parser';
 
 enum Network {
   // MAINNET = "mainnet",
@@ -55,7 +45,7 @@ function setupEnv(network: Network): [string, Keys.AsymmetricKey, string, string
 const [network, keys, nodeRpc, nodeEvents] = setupEnv(currentNetwork)
 
 const  exampleContractClient = new ExampleContractClient(nodeRpc, nodeEvents, network, keys.publicKey)
-const eventHandler = new EventHandler(exampleContractClient)
+
 
 const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/contract.wasm"
 
@@ -63,6 +53,7 @@ const wasmPath = "/home/mike/casper-project/test-dapp/project-1/client/wasm/cont
 const contractInstallCost = "50334128500"
 
 async function runScenario() {
+  const eventHandler = await EventHandler.create(exampleContractClient)
   
   const contractHash = await exampleContractClient.findContractHash()
   console.log({ contractHash: contractHash })
@@ -73,37 +64,17 @@ async function runScenario() {
     console.log("Contract already installed. Procceding to endpoints calls.")
   }
   
-  console.log("Initializing client woth hash of deployed contract")
+  console.log("Initializing client with hash of deployed contract")
   await exampleContractClient.initWithContractHash()
-
+  
+  console.log("Start listening events")
   eventHandler.startListening(ev => {
     console.log(JSON.stringify(ev))
   })
-  // startListening(nodeEvents, nodeRpc, exampleContractClient.getContractHash())
 
   await emitEvent()
 
 }
-
-// async function processEvents(deployHash: string, contractSdk: ContractSDK) {
-//   // const r1 = await contractSdk.contractClient.casperClient?.getDeploy(deployHash)
-//   const rpcClient = new CasperServiceByJsonRPC(
-//     `http://localhost:11101/rpc`
-//   );
-
-//   const parser = await Parser.create(rpcClient, ["0a70ebdce3c421b541fd836ec0131a27b449ed3ef6b1ba41364b6d4576de070a"])
-//   const deploy = await rpcClient.getDeployInfo(deployHash);
-
-//   const events = await parser.parseExecutionResult(
-//     deploy.execution_results[0].result as ExecutionResult
-//   );
-
-//   events.forEach(ev => {
-//     console.log("____________")
-//     console.log(ev)
-
-//   });
-// }
 
 async function emitEvent() {
   console.log("Calling event")

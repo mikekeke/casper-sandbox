@@ -2,14 +2,10 @@ import {
   CasperClient,
   Contracts,
   RuntimeArgs,
-  CLValueBuilder,
   CLPublicKey,
   DeployUtil,
-  Signer,
   Keys,
   GetDeployResult
-
-
 } from "casper-js-sdk";
 
 export class ExampleContractClient {

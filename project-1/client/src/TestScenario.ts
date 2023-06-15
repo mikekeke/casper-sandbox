@@ -1,8 +1,13 @@
 
 
 import {
+  CLBool,
+  CLMap,
+  CLString,
+  CLValueBuilder,
   DeployUtil,
-  Keys
+  Keys,
+  Contracts
 
 
 } from "casper-js-sdk";
@@ -10,6 +15,7 @@ import {
 import { readKeys, readWasm } from "./Utils";
 import { ExampleContractClient } from "./ExampleContractClient";
 import { EventHandler } from "./ContractEvents";
+// import { fromCLMap } from "casper-js-sdk/dist/lib/Contracts";
 
 
 enum Network {
@@ -73,15 +79,19 @@ async function runScenario() {
     console.log(JSON.stringify(ev))
   })
 
-  
+
   await registerAndWaitExecuted()
   await appendAndWaitExecuted("Append B")
-  
+
+  const registrations = await exampleContractClient.queyRegisteredAccounts()
+  console.log(`Registrations:\n${JSON.stringify(Object.fromEntries(registrations))}`)
+
+
   await emitEvent("test-message-2")
   await emitEvent("test-message-3")
 
-  const currentPhrase = await exampleContractClient.queyPharase()
-  console.log(`Current phhrase: ${currentPhrase}`)
+  const currentPhrase = await exampleContractClient.queyPhrase()
+  console.log(`Current phrase: ${currentPhrase}`)
 
 }
 
@@ -98,7 +108,7 @@ async function appendAndWaitExecuted(phrase: string) {
     const cause = appendDeployResult.execution_results[0].result.Failure?.error_message
     console.log(`Append failed: ${cause}`)
   } else {
-    console.log(`Appended sucessfully!`)
+    console.log(`Appended successfully!`)
   }
 }
 

@@ -1,3 +1,10 @@
+//! This is simple example of Casper Contract with explainers and walkthrough commentaries.
+//! This example shows:
+//! - How to initialize contract during deployment
+//! - How to read and write Named Keys
+//! - How to work with Dictionary
+//! - How to work with events
+
 #![no_std]
 #![no_main]
 
@@ -8,46 +15,34 @@ compile_error!("target arch should be wasm32: compile with '--target wasm32-unkn
 // `no_std` environment.
 extern crate alloc;
 
-use alloc::string::{String, ToString};
+use alloc::{
+    collections::BTreeMap,
+    string::{String, ToString},
+};
 
 use casper_contract::{
     contract_api::{runtime, storage},
-    unwrap_or_revert::{UnwrapOrRevert, self},
+    unwrap_or_revert::UnwrapOrRevert,
 };
 
-use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs, URef};
+use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs};
 use entry_points::mk_entry_points;
 
 mod constants;
 mod entry_points;
+mod error;
 mod events;
 mod utils;
 
-/// An error enum which can be converted to a `u16` so it can be returned as an `ApiError::User`.
-#[repr(u16)]
-enum Error {
-    AlredayDeployed = 0,
-    AlreadyInitialized = 1,
-    UserAlreadyRegistered = 2,
-    UnregisteredTriedToAdd = 3,
-    ValueKeyNotFound = 4,
-}
-
-impl From<Error> for ApiError {
-    fn from(error: Error) -> Self {
-        ApiError::User(error as u16)
-    }
-}
-
-// Main entry point that will be run during Deploy execution.
-// Beware: This code will be called inside `Account` context.
-// Putting any named keys or dictionaries will add them into Account context,
-// not into Contract context (so this keys and dictionaries will not be awailable
-// inside deployed contract)
+/// Main entry point that will be run during Deploy execution.
+/// Beware: This code will be called inside `Account` context.
+/// Putting any named keys or dictionaries will add them into Account context,
+/// not into Contract context (so this keys and dictionaries will not be awailable
+/// inside deployed contract)
 #[no_mangle]
 pub extern "C" fn call() {
     if runtime::get_key(constants::contract::ACCESS_UREF).is_some() {
-        runtime::revert(Error::AlredayDeployed)
+        runtime::revert(error::Error::AlredayDeployed)
     }
     install_contract();
 }
@@ -64,12 +59,20 @@ fn install_contract() {
     // Named key is used here for the demo purposes.
     let mut contract_keys = NamedKeys::new();
 
+    // URef containing string value that will be used to accumulate messages from
+    // `append_phrase` entrypoint.
+    // URefs are used to store values on-chain,
+    // see https://docs.casper.network/concepts/design/casper-design/#uref-head
+    // Note, that it is possible to set AccessRights to URef,
+    // e.g. to make it read or write only.
+    // For more details see AccessRights in Rust docs and
+    // https://docs.casper.network/concepts/design/casper-design/#uref-permissions
     let new_empty_val = storage::new_uref("");
+
     contract_keys.insert(
         constants::append::ACCUM_VALUE.to_string(),
         new_empty_val.into(),
     );
-
 
     // Creates upgradable contract.
     // For not-upgradable use "storage::new_locked_contract"
@@ -105,45 +108,55 @@ pub extern "C" fn init() {
     // can not be initiated twice
     ensure_not_init();
 
-    // Dictionary will be created in Contract context, 
+    // Dictionary will be created in Contract context,
     // because `init()` is called as Contract entrypoint
     storage::new_dictionary(constants::registry::DICT).unwrap_or_revert();
 
+    let empty_map: BTreeMap<String, bool> = BTreeMap::new();
+    storage::named_dictionary_put(
+        constants::registry::DICT,
+        constants::registry::REGISTRY_MAP,
+        empty_map,
+    );
+
     // Initialize events provided by `casper-event-standard` lib.
-    // Events are store in special Dictionary, so they are initialized inside the 
+    // Events are store in special Dictionary, so they are initialized inside the
     // Contract context to make this Dictionary available inside the Contract
     events::init_events();
 }
 
 fn ensure_not_init() {
     if runtime::get_key(constants::registry::DICT).is_some() {
-        runtime::revert(Error::AlreadyInitialized)
+        runtime::revert(error::Error::AlreadyInitialized)
     }
 }
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-    let (is_registered, key) = utils::caller_is_registered();
+    let mut registry = utils::get_registration_map();
+    let (is_registered, account_hash) = utils::caller_in_registry(&registry);
 
     if is_registered {
-        runtime::revert(Error::UserAlreadyRegistered);
+        runtime::revert(error::Error::UserAlreadyRegistered);
     }
 
-    let test_ref = storage::new_uref("fff");
+    registry.insert(account_hash, true);
 
-    storage::named_dictionary_put(constants::registry::DICT, key.as_str(), true);
-    storage::named_dictionary_put(constants::registry::DICT, "ff", test_ref);
+    storage::named_dictionary_put(
+        constants::registry::DICT,
+        constants::registry::REGISTRY_MAP,
+        registry,
+    );
 }
 
 #[no_mangle]
 pub extern "C" fn append_phrase() {
-    let (is_registered, _account_hash) = utils::caller_is_registered();
-    if !is_registered {
-        runtime::revert(Error::UnregisteredTriedToAdd)
+    if !utils::caller_is_registered() {
+        runtime::revert(error::Error::UnregisteredTriedToAdd)
     }
 
     let val_key = runtime::get_key(constants::append::ACCUM_VALUE)
-        .unwrap_or_revert_with(Error::ValueKeyNotFound);
+        .unwrap_or_revert_with(error::Error::ValueKeyNotFound);
     let what_to_add: String = runtime::get_named_arg(constants::append::ARG);
     let mut current_value: String = storage::read_from_key(val_key)
         .unwrap_or_revert_with(ApiError::Read)

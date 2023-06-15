@@ -7,14 +7,17 @@ import {
   Keys,
   GetDeployResult,
   CLValueBuilder,
-  NamedArg
+  CLMap,
+  CLString,
+  CLBool,
+
 } from "casper-js-sdk";
 
 
 type DeployHash = string
 
 export class ExampleContractClient {
-  
+
   readonly contractKey = "add_with_registry_contract_key";
   private casperClient: CasperClient;
 
@@ -151,9 +154,16 @@ export class ExampleContractClient {
       .then(deployHash => { return [deploy, deployHash] })
   }
 
-  public async queyPharase(): Promise<string> {
+  public async queyPhrase(): Promise<string> {
     return this.contractClient.queryContractData(["accumulator_value"])
-    
+  }
+
+  public async queyRegisteredAccounts(): Promise<Map<string,boolean>> {
+    const clMap = await this.contractClient.queryContractDictionary(
+      "contract_dict",
+      "registry_map"
+    )
+    return Contracts.fromCLMap(clMap.data)
   }
 
   public static isDeploySuccesfull(deployResult: GetDeployResult): boolean {

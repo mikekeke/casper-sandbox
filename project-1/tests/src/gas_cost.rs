@@ -8,7 +8,7 @@ use crate::utility::misc;
 fn install_cost_regression() {
     let (_, builder) = misc::deploy_contract();
     let gas = builder.last_exec_gas_cost();
-    let expected_gas: Gas = Gas::from(41211239520 as u64);
+    let expected_gas: Gas = Gas::from(47456416310 as u64);
     assert_eq!(gas, expected_gas);
 }
 
@@ -25,6 +25,6 @@ fn register_cost_regression(){
     builder.exec(call_register).expect_success().commit();
     let gas = builder.last_exec_gas_cost();
     // let expected_gas: Gas = Gas::from(312402510 as u64);
-    let expected_gas: Gas = Gas::from(312402510 as u64);
+    let expected_gas: Gas = Gas::from(479379480 as u64);
     assert_eq!(gas, expected_gas);
 }

@@ -26,7 +26,6 @@ fn event_emitted() {
         .expect("must have key")
         .as_uref()
         .expect("must convert to seed uref");
-    println!("UREF: {:#?}", seed_uref);
 
     let stored_event_bytes: Bytes = builder
         .query_dictionary_item(None, seed_uref, "0")

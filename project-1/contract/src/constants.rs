@@ -12,7 +12,8 @@ pub mod init {
 
 pub mod registry {
     pub const ENTRYPOINT: &str = "register_user_key";
-    pub const DICT: &str = "registry_dict";
+    pub const DICT: &str = "contract_dict";
+    pub const REGISTRY_MAP: &str = "registry_map";
 }
 
 pub mod append {

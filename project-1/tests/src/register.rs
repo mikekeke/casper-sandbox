@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use casper_engine_test_support::ExecuteRequestBuilder;
 use casper_types::{runtime_args, RuntimeArgs};
 
@@ -5,7 +7,7 @@ use crate::utility::{assert, misc, query};
 use contract::constants;
 
 #[test]
-fn user_registration() {
+fn registration_updates_registration_map() {
     let (account_addr, mut builder) = misc::deploy_contract();
     let call_register = ExecuteRequestBuilder::contract_call_by_hash(
         account_addr,
@@ -17,12 +19,13 @@ fn user_registration() {
     builder.exec(call_register).expect_success().commit();
 
     let key = account_addr.to_string();
-    let is_registered: bool = query::named_dictionary(
+    let reg_map: BTreeMap<String, bool> = query::named_dictionary(
         &builder,
         account_addr,
         constants::registry::DICT,
-        key.as_str(),
+        constants::registry::REGISTRY_MAP,
     );
+    let is_registered = reg_map.get(&key).unwrap().to_owned();
     assert_eq!(is_registered, true);
 }
 

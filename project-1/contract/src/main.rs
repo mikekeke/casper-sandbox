@@ -12,11 +12,10 @@ use alloc::string::{String, ToString};
 
 use casper_contract::{
     contract_api::{runtime, storage},
-    unwrap_or_revert::UnwrapOrRevert,
+    unwrap_or_revert::{UnwrapOrRevert, self},
 };
 
-use casper_event_standard::Schemas;
-use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs};
+use casper_types::{contracts::NamedKeys, ApiError, RuntimeArgs, URef};
 use entry_points::mk_entry_points;
 
 mod constants;
@@ -40,14 +39,80 @@ impl From<Error> for ApiError {
     }
 }
 
+// Main entry point that will be run during Deploy execution.
+// Beware: This code will be called inside `Account` context.
+// Putting any named keys or dictionaries will add them into Account context,
+// not into Contract context (so this keys and dictionaries will not be awailable
+// inside deployed contract)
+#[no_mangle]
+pub extern "C" fn call() {
+    if runtime::get_key(constants::contract::ACCESS_UREF).is_some() {
+        runtime::revert(Error::AlredayDeployed)
+    }
+    install_contract();
+}
+
+// Beware: This code will be called inside `Account` context.
+// Putting any named keys or dictionaries will add them into Account context,
+// not into Contract context (so this keys and dictionaries will not be awaitable
+// inside deployed contract)
+fn install_contract() {
+    // Adding named key to contract that will be used to accumulate messages
+    // from `append_phrase` entrypoint.
+    // Note that it is not recommended to use named keys to store big amount of data,
+    // prefer to use Dictionary (see https://docs.casper.network/concepts/dictionaries/).
+    // Named key is used here for the demo purposes.
+    let mut contract_keys = NamedKeys::new();
+
+    let new_empty_val = storage::new_uref("");
+    contract_keys.insert(
+        constants::append::ACCUM_VALUE.to_string(),
+        new_empty_val.into(),
+    );
+
+
+    // Creates upgradable contract.
+    // For not-upgradable use "storage::new_locked_contract"
+    // AFAIK, at the moment there is no way to tell if already deployed contract
+    // is upgradable or not.
+    let (contract_hash, contract_version) = storage::new_contract(
+        mk_entry_points(),
+        Some(contract_keys),
+        Some(constants::contract::PACKAGE_NAME.to_string()),
+        // Access URef required for at least upgrading the contract,
+        // w/o it upgrade is not possible
+        Some(constants::contract::ACCESS_UREF.to_string()),
+    );
+
+    runtime::put_key(constants::contract::KEY, contract_hash.into());
+    runtime::put_key(
+        constants::contract::VERSION_KEY,
+        storage::new_uref(contract_version).into(),
+    );
+
+    // It is common practice to call something like `init()` entrypoint
+    // to initialize Contract state. See "pub extern "C" fn init()" below for details.
+    runtime::call_contract(
+        contract_hash,
+        constants::init::ENTRYPOINT,
+        RuntimeArgs::new(),
+    )
+}
+
 #[no_mangle]
 pub extern "C" fn init() {
+    // Beware: it is up to Contract author to make sure that Caontract
+    // can not be initiated twice
     ensure_not_init();
 
-    // dictionary will be created in contract context
+    // Dictionary will be created in Contract context, 
+    // because `init()` is called as Contract entrypoint
     storage::new_dictionary(constants::registry::DICT).unwrap_or_revert();
 
-    init_events();
+    // Initialize events provided by `casper-event-standard` lib.
+    // Events are store in special Dictionary, so they are initialized inside the 
+    // Contract context to make this Dictionary available inside the Contract
+    events::init_events();
 }
 
 fn ensure_not_init() {
@@ -58,18 +123,21 @@ fn ensure_not_init() {
 
 #[no_mangle]
 pub extern "C" fn register_user_key() {
-    let (is_registered, key) = caller_is_registered();
+    let (is_registered, key) = utils::caller_is_registered();
 
     if is_registered {
         runtime::revert(Error::UserAlreadyRegistered);
     }
 
+    let test_ref = storage::new_uref("fff");
+
     storage::named_dictionary_put(constants::registry::DICT, key.as_str(), true);
+    storage::named_dictionary_put(constants::registry::DICT, "ff", test_ref);
 }
 
 #[no_mangle]
 pub extern "C" fn append_phrase() {
-    let (is_registered, _account_hash) = caller_is_registered();
+    let (is_registered, _account_hash) = utils::caller_is_registered();
     if !is_registered {
         runtime::revert(Error::UnregisteredTriedToAdd)
     }
@@ -92,7 +160,7 @@ pub extern "C" fn append_phrase() {
     storage::write(key_uref, current_value);
 }
 
-fn caller_is_registered() -> (bool, String) {
+pub(crate) fn caller_is_registered() -> (bool, String) {
     let account_hash = runtime::get_caller().to_string();
     let key = account_hash.as_str();
     let is_registered = storage::named_dictionary_get(constants::registry::DICT, key)
@@ -106,48 +174,4 @@ pub extern "C" fn emit_event() {
     let message: String = runtime::get_named_arg(constants::events::SOME_EVENT_MSG);
     let event = events::SomeEvent { message };
     casper_event_standard::emit(event);
-}
-
-fn isntall_contract() {
-    let mut contract_keys = NamedKeys::new();
-
-    let new_empty_val = storage::new_uref("");
-    contract_keys.insert(
-        constants::append::ACCUM_VALUE.to_string(),
-        new_empty_val.into(),
-    );
-
-    let (contract_hash, contract_version) = storage::new_locked_contract(
-        mk_entry_points(),
-        Some(contract_keys),
-        Some(constants::contract::PACKAGE_NAME.to_string()),
-        // access URef required for at least upgrading the contract,
-        // w/o it upgrade is not possible
-        Some(constants::contract::ACCESS_UREF.to_string()),
-    );
-
-    runtime::put_key(constants::contract::KEY, contract_hash.into());
-    runtime::put_key(
-        constants::contract::VERSION_KEY,
-        storage::new_uref(contract_version).into(),
-    );
-
-    runtime::call_contract(
-        contract_hash,
-        constants::init::ENTRYPOINT,
-        RuntimeArgs::new(),
-    )
-}
-
-#[no_mangle]
-pub extern "C" fn call() {
-    if runtime::get_key(constants::contract::ACCESS_UREF).is_some() {
-        runtime::revert(Error::AlredayDeployed)
-    }
-    isntall_contract();
-}
-
-fn init_events() {
-    let schemas = Schemas::new().with::<events::SomeEvent>();
-    casper_event_standard::init(schemas);
 }
